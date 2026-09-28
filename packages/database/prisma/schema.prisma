@@ -1,0 +1,458 @@
+// The Hunt for the Tickets - database schema
+// Postgres (Supabase in production; a local Postgres - Docker or a Supabase dev
+// project - for local dev). DATABASE_URL should be the pooled/pgbouncer connection
+// string (port 6543 on Supabase) since the backend runs as short-lived serverless
+// functions on Vercel; DIRECT_URL is the non-pooled connection (port 5432) that
+// `prisma migrate` needs to run schema changes. See docs/DEPLOYMENT.md.
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/client"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ============================================================================
+// Identity
+// ============================================================================
+
+// SQLite has no native enum support in Prisma, so "enum-like" columns below are plain
+// String columns instead, with the allowed values documented in a comment and enforced
+// by TypeScript union types exported from packages/database/src/index.ts (Role,
+// ItemCategory, Rarity, CombatStatus, RewardSource, ActorType, QuestType) plus zod
+// validation at the API boundary. Switching to Postgres later can reintroduce real
+// `enum` blocks if desired - no other code changes needed either way.
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  passwordHash   String
+  displayName    String
+  legalName      String?
+  role           String   @default("EMPLOYEE") // EMPLOYEE | ADMIN
+  zendeskUserId  String?  @unique
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  character           Character?
+  rewardTransactions  RewardTransaction[] @relation("RewardTransactionUser")
+  actedRewardTx       RewardTransaction[] @relation("RewardTransactionActor")
+  adminActions        AdminAction[]       @relation("AdminActionActor")
+  userAchievements    UserAchievement[]
+  userQuests          UserQuest[]
+  teamEventContribs   TeamEventContribution[]
+
+  @@map("users")
+}
+
+// ============================================================================
+// Character / RPG progression
+// ============================================================================
+
+model Character {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  level           Int      @default(1)
+  xp              Int      @default(0)
+  coins           Int      @default(0)
+
+  currentWorldId  String?
+  currentWorld    World?   @relation(fields: [currentWorldId], references: [id])
+  currentStageId  String?
+  currentStage    Stage?   @relation(fields: [currentStageId], references: [id])
+
+  // Equipped cosmetics (nullable = not equipped)
+  equippedHead       String?
+  equippedHair       String?
+  equippedFace       String?
+  equippedBody       String?
+  equippedArmorId    String?
+  equippedWeaponId   String?
+  equippedAccessoryId String?
+  equippedPetId      String?
+  equippedTitleId    String?
+  equippedAuraId     String?
+  equippedMountId    String?
+  equippedBackgroundId String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  stats           CharacterStats?
+  inventory       InventoryItem[]
+  combatSessions  CombatSession[]
+
+  @@map("characters")
+}
+
+model CharacterStats {
+  id           String    @id @default(cuid())
+  characterId  String    @unique
+  character    Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  strength     Int @default(5)
+  defense      Int @default(5)
+  agility      Int @default(5)
+  magic        Int @default(5)
+  luck         Int @default(5)
+  unspentPoints Int @default(0)
+
+  @@map("character_stats")
+}
+
+// ============================================================================
+// Items / cosmetics / shop
+// ============================================================================
+
+model Item {
+  id                 String       @id @default(cuid())
+  key                String       @unique
+  name               String
+  description        String
+  category           String       // WEAPON | ARMOR | HELMET | PET | MOUNT | EFFECT | EMOTE | TITLE | BACKGROUND | ACCESSORY
+  rarity             String       @default("COMMON") // COMMON | UNCOMMON | RARE | EPIC | LEGENDARY
+  price              Int          @default(0)
+  unlockRequirement  String?      // JSON: e.g. {"minLevel": 20}
+  previewImage       String?
+  isGameplayUpgrade  Boolean      @default(false) // true = affects PvE stats, not just cosmetic
+  statBonuses        String?      // JSON: e.g. {"strength": 2}
+  active             Boolean      @default(true)
+  createdAt          DateTime     @default(now())
+
+  inventoryEntries   InventoryItem[]
+
+  @@map("items")
+}
+
+model InventoryItem {
+  id           String    @id @default(cuid())
+  characterId  String
+  character    Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  itemId       String
+  item         Item      @relation(fields: [itemId], references: [id])
+  acquiredAt   DateTime  @default(now())
+  source       String    @default("shop") // shop | quest | achievement | admin
+
+  @@unique([characterId, itemId])
+  @@map("inventory_items")
+}
+
+// ============================================================================
+// Worlds / stages / monsters / combat
+// ============================================================================
+
+model World {
+  id             String   @id @default(cuid())
+  key            String   @unique
+  name           String
+  description    String
+  order          Int
+  xpRequirement  Int      @default(0)
+  theme          String?
+  active         Boolean  @default(true)
+
+  // Shared "regional liberation" meter (Helldivers-style): every player deployed here
+  // contributes to the same pool just by closing tickets, regardless of their own personal
+  // monster queue below. See apps/backend/src/engine/ticketCombat.ts.
+  liberationCurrent Int   @default(0)
+  liberationTarget  Int   @default(2000)
+
+  stages         Stage[]
+  monsters       Monster[]
+  characters     Character[]
+
+  @@map("worlds")
+}
+
+model Stage {
+  id        String   @id @default(cuid())
+  worldId   String
+  world     World    @relation(fields: [worldId], references: [id], onDelete: Cascade)
+  key       String
+  name      String
+  order     Int
+
+  characters Character[]
+
+  @@unique([worldId, key])
+  @@map("stages")
+}
+
+model Monster {
+  id                 String   @id @default(cuid())
+  key                String   @unique
+  name               String
+  description        String
+  level              Int      @default(1)
+  hp                 Int
+  attack             Int
+  defense            Int
+  xpReward           Int
+  coinReward         Int
+  image              String?
+  rarity             String   @default("COMMON")
+  specialAbility     String?
+  worldId            String
+  world              World    @relation(fields: [worldId], references: [id])
+  isElite            Boolean  @default(false)
+  isBoss             Boolean  @default(false)
+  unlockRequirement  String?  // JSON
+
+  combatSessions     CombatSession[]
+
+  @@map("monsters")
+}
+
+model CombatSession {
+  id             String       @id @default(cuid())
+  characterId    String
+  character      Character    @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  monsterId      String
+  monster        Monster      @relation(fields: [monsterId], references: [id])
+  monsterHp      Int
+  monsterMaxHp   Int
+  status         String       @default("IN_PROGRESS") // IN_PROGRESS | VICTORY | DEFEAT
+  startedAt      DateTime     @default(now())
+  completedAt    DateTime?
+
+  @@map("combat_sessions")
+}
+
+// ============================================================================
+// Tickets / reward pipeline (idempotent)
+// ============================================================================
+
+model Ticket {
+  id                String    @id @default(cuid())
+  provider           String   // mock | csv | zendesk-api | zendesk-webhook | google-sheets | browser-capture
+  externalId         String   // Zendesk ticket ID / CSV ticket_id / etc.
+  employeeExternalId String?  // raw assignee identifier from the source before mapping to a User
+  userId             String?
+  status             String
+  category           String?
+  rawFields          String?  // JSON blob of source fields for auditing/debugging
+  firstSeenAt        DateTime @default(now())
+  lastSeenAt         DateTime @default(now())
+  solvedCount        Int      @default(0) // how many times this ticket has completed a reward cycle
+
+  events             TicketEvent[]
+  rewardTransactions RewardTransaction[]
+
+  @@unique([provider, externalId])
+  @@map("tickets")
+}
+
+model TicketEvent {
+  id               String   @id @default(cuid())
+  ticketId         String
+  ticket           Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  externalEventId  String?  // dedupe key from the source system when available
+  eventType        String   // solved | reopened | updated
+  occurredAt       DateTime @default(now())
+  processed        Boolean  @default(false)
+  rewardGranted    Boolean  @default(false)
+  skippedReason    String?
+
+  @@unique([ticketId, externalEventId])
+  @@map("ticket_events")
+}
+
+model TicketCategoryRule {
+  id            String   @id @default(cuid())
+  name          String
+  fieldSource   String   // type | group | form | tags | custom_field | priority
+  fieldKey      String?  // custom field key, when fieldSource = custom_field
+  operator      String   // equals | contains | in | gte | lte
+  value         String   // JSON-encoded value (string, number or array)
+  difficulty    String   // simple | medium | hard | critical | legendary | custom
+  xp            Int
+  coins         Int
+  priority      Int      @default(0) // lower = evaluated first
+  active        Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("ticket_category_rules")
+}
+
+// ============================================================================
+// Reward audit log
+// ============================================================================
+
+model RewardTransaction {
+  id             String       @id @default(cuid())
+  transactionUid String       @unique @default(cuid())
+  userId         String
+  user           User         @relation("RewardTransactionUser", fields: [userId], references: [id], onDelete: Cascade)
+  source         String       // ZENDESK_TICKET | COMBAT | QUEST | ACHIEVEMENT | ADMIN_GRANT | ADMIN_REMOVE | TEAM_EVENT | SHOP_PURCHASE
+  ticketId       String?
+  ticket         Ticket?      @relation(fields: [ticketId], references: [id])
+  eventId        String?
+  category       String?
+  xp             Int          @default(0)
+  coins          Int          @default(0)
+  reason         String?
+  provider       String?
+  actorType      String       @default("SYSTEM") // SYSTEM | ADMIN | PLAYER
+  actorUserId    String?
+  actorUser      User?        @relation("RewardTransactionActor", fields: [actorUserId], references: [id])
+  createdAt      DateTime     @default(now())
+
+  @@map("reward_transactions")
+}
+
+// ============================================================================
+// Achievements
+// ============================================================================
+
+model Achievement {
+  id           String   @id @default(cuid())
+  key          String   @unique
+  name         String
+  description  String
+  criteria     String   // JSON, e.g. {"type":"tickets_completed","target":10}
+  xpReward     Int      @default(0)
+  coinsReward  Int      @default(0)
+  icon         String?
+  active       Boolean  @default(true)
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id])
+  progress      Int         @default(0)
+  unlockedAt    DateTime?
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+// ============================================================================
+// Quests
+// ============================================================================
+
+model Quest {
+  id           String    @id @default(cuid())
+  key          String
+  name         String
+  description  String
+  type         String    // DAILY | WEEKLY
+  criteria     String    // JSON, e.g. {"type":"tickets_completed","target":5}
+  xpReward     Int       @default(0)
+  coinsReward  Int       @default(0)
+  itemRewardId String?
+  active       Boolean   @default(true)
+  periodStart  DateTime
+  periodEnd    DateTime
+
+  userQuests   UserQuest[]
+
+  @@map("quests")
+}
+
+model UserQuest {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questId     String
+  quest       Quest     @relation(fields: [questId], references: [id])
+  progress    Int       @default(0)
+  completed   Boolean   @default(false)
+  claimedAt   DateTime?
+
+  @@unique([userId, questId])
+  @@map("user_quests")
+}
+
+// ============================================================================
+// Admin / config / integrations
+// ============================================================================
+
+model AdminAction {
+  id            String   @id @default(cuid())
+  actorUserId   String
+  actorUser     User     @relation("AdminActionActor", fields: [actorUserId], references: [id])
+  actionType    String   // grant_xp | remove_xp | grant_coins | remove_coins | reset_character | update_rule | sync | csv_import | ...
+  targetUserId  String?
+  payload       String?  // JSON
+  createdAt     DateTime @default(now())
+
+  @@map("admin_actions")
+}
+
+model IntegrationSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   // JSON
+  updatedAt DateTime @updatedAt
+
+  @@map("integration_settings")
+}
+
+model SyncState {
+  id           String    @id @default(cuid())
+  provider     String    @unique
+  cursor       String?
+  lastRunAt    DateTime?
+  lastStatus   String?   // success | error | never_run
+  lastError    String?
+  recordsSeen  Int       @default(0)
+
+  @@map("sync_state")
+}
+
+// ============================================================================
+// Seasons / team events
+// ============================================================================
+
+model Season {
+  id         String   @id @default(cuid())
+  key        String   @unique
+  name       String
+  startDate  DateTime
+  endDate    DateTime
+  active     Boolean  @default(false)
+
+  @@map("seasons")
+}
+
+model TeamEvent {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  name          String
+  description   String
+  targetDamage  Int
+  currentDamage Int      @default(0)
+  startDate     DateTime
+  endDate       DateTime
+  active        Boolean  @default(true)
+
+  contributions TeamEventContribution[]
+
+  @@map("team_events")
+}
+
+model TeamEventContribution {
+  id          String    @id @default(cuid())
+  teamEventId String
+  teamEvent   TeamEvent @relation(fields: [teamEventId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  damage      Int
+  createdAt   DateTime  @default(now())
+
+  @@map("team_event_contributions")
+}

@@ -1,0 +1,45 @@
+* { box-sizing: border-box; }
+body {
+  width: 320px;
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  background: #0b0710;
+  color: #e6e0f0;
+}
+#app { padding: 16px; }
+h1 {
+  font-size: 15px;
+  margin: 0 0 12px;
+  color: #f4c95d;
+  letter-spacing: 0.02em;
+}
+.row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 12px; color: #9a8fb5; }
+.xp-track { height: 10px; border-radius: 999px; background: #1c1428; border: 1px solid #2a1e3d; overflow: hidden; margin: 4px 0 12px; }
+.xp-fill { height: 100%; background: linear-gradient(90deg, #b8841c, #f4c95d); }
+.coins { color: #f4c95d; font-weight: 600; }
+.card { background: #120c1c; border: 1px solid #2a1e3d; border-radius: 10px; padding: 10px; margin-bottom: 8px; }
+.ticket-item { font-size: 11px; color: #c9c0dd; padding: 4px 0; border-top: 1px solid #1c1428; }
+.ticket-item:first-child { border-top: none; }
+button, input {
+  font-family: inherit;
+  font-size: 12px;
+  width: 100%;
+  padding: 8px;
+  border-radius: 8px;
+  border: 1px solid #2a1e3d;
+  background: #1c1428;
+  color: #e6e0f0;
+  margin-bottom: 8px;
+}
+button {
+  background: linear-gradient(180deg, #f4c95d, #b8841c);
+  color: #0b0710;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+}
+button.secondary { background: #1c1428; color: #e6e0f0; font-weight: 500; }
+a.link { display: block; text-align: center; color: #f4c95d; font-size: 12px; text-decoration: none; margin-top: 8px; }
+.error { color: #ff8a5c; font-size: 11px; margin-bottom: 8px; }
+#syncResults { max-height: 220px; overflow-y: auto; margin-bottom: 8px; }
+#syncResults:empty { margin-bottom: 0; }

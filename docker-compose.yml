@@ -1,0 +1,20 @@
+# Local Postgres for development - an alternative to pointing your dev .env straight at a
+# Supabase project. Requires Docker Desktop. Start with: docker compose up -d
+# Then set (both .env and packages/database/.env):
+#   DATABASE_URL="postgresql://hunt:hunt@localhost:5432/hunt"
+#   DIRECT_URL="postgresql://hunt:hunt@localhost:5432/hunt"
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: hunt
+      POSTGRES_PASSWORD: hunt
+      POSTGRES_DB: hunt
+    ports:
+      - "5432:5432"
+    volumes:
+      - hunt_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  hunt_postgres_data:
