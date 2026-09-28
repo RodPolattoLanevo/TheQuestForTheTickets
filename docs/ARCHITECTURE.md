@@ -143,6 +143,15 @@ queue for that region resumes wherever it was (or starts fresh) via the same
 `getOrCreateActiveSession` used everywhere else; deploying elsewhere and back doesn't reset
 progress on either side.
 
+The map itself (`apps/web/src/components/RegionMap.tsx` + `RegionMap.css`) is a single
+pixel-art background image (`region-map.png`, bundled as a local Vite asset - no external
+URL) with clickable `<button>` markers layered on top at hand-tuned `x`/`y` percentages per
+region (`REGION_COORDS`, keyed by `World.key`). The image itself carries no text - every
+label, lock icon, and liberation number is rendered by the site (accessible, translatable,
+and stays sharp at any zoom), not baked into the art. `WorldMap.tsx` still owns all the
+data-fetching/deploy logic and the region detail panel below the map; `RegionMap` is purely
+presentational, driven by the same `World[]` from `GET /api/worlds`.
+
 ## Character/monster art
 
 Original, hand-designed pixel art - never copyrighted game assets (spec section 4/6).

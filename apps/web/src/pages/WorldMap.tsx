@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "../api/client";
 import { useToast } from "../context/ToastContext";
+import { RegionMap } from "../components/RegionMap";
 
 interface Monster {
   id: string;
@@ -34,15 +35,6 @@ const RARITY_COLOR: Record<string, string> = {
   RARE: "text-blue-400",
   EPIC: "text-purple-400",
   LEGENDARY: "text-gold-400",
-};
-
-const THEME_ICON: Record<string, string> = {
-  meadow: "🏘️",
-  forest: "🌲",
-  cave: "⛏️",
-  wasteland: "🏜️",
-  fortress: "🏰",
-  volcano: "🌋",
 };
 
 export function WorldMap() {
@@ -87,58 +79,31 @@ export function WorldMap() {
         meter - the more agents fighting there, the faster it clears.
       </p>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {worlds.map((world) => {
-          const cleared = world.liberationPct >= 100;
-          const icon = (world.theme && THEME_ICON[world.theme]) || "🗺️";
-          return (
-            <button
-              key={world.id}
-              onClick={() => deploy(world)}
-              disabled={!world.unlocked || world.isCurrent || deploying === world.id}
-              className={`panel flex flex-col gap-3 p-4 text-left transition ${
-                world.isCurrent ? "border-gold-500 shadow-glow" : world.unlocked ? "hover:brightness-110" : "opacity-60"
-              } disabled:cursor-not-allowed`}
-            >
-              <div className="flex items-start justify-between gap-2">
-                <span className="text-3xl [image-rendering:pixelated]">{world.unlocked ? icon : "🔒"}</span>
-                <div className="flex flex-col items-end gap-1">
-                  {world.isCurrent && <span className="whitespace-nowrap bg-gold-500/20 px-2 py-0.5 text-[9px] uppercase tracking-wide text-gold-400">▶ Deployed</span>}
-                  {cleared && <span className="whitespace-nowrap bg-green-500/20 px-2 py-0.5 text-[9px] uppercase tracking-wide text-green-400">Liberated</span>}
-                </div>
-              </div>
+      <div className="mt-6">
+        <RegionMap
+          regions={worlds}
+          onDeploy={(regionId) => {
+            const world = worlds.find((w) => w.id === regionId);
+            if (world) deploy(world);
+          }}
+          deploying={deploying}
+        />
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] uppercase tracking-wide text-slate-500">
+          <span>⚔ = deployed here now</span>
+          <span>🔒 = locked, needs more XP</span>
+          <span>Numbered/themed marker = unlocked, click to deploy</span>
+        </div>
+      </div>
 
-              <div>
-                <h2 className="font-display text-xs leading-relaxed text-gold-400">
-                  {world.order}. {world.name}
-                </h2>
-                <p className="mt-1 text-xs text-slate-400">{world.description}</p>
-              </div>
-
-              {world.unlocked ? (
-                <div>
-                  <div className="flex items-center justify-between text-[10px] uppercase tracking-wide text-slate-500">
-                    <span>Liberation</span>
-                    <span className="text-green-400">{world.liberationPct}%</span>
-                  </div>
-                  <div className="xp-bar-track mt-1 !h-3">
-                    <div className="liberation-bar-fill" style={{ width: `${world.liberationPct}%` }} />
-                  </div>
-                </div>
-              ) : (
-                <p className="text-xs text-ember-400">🔒 Requires {world.xpRequirement.toLocaleString()} XP</p>
-              )}
-
-              <p className="text-[10px] text-slate-500">
-                {world.monsters.length} monster{world.monsters.length === 1 ? "" : "s"} · {world.monsters.filter((m) => m.defeated).length} defeated by you
-              </p>
-
-              {!world.isCurrent && world.unlocked && (
-                <span className="btn-secondary mt-1 justify-center !py-1.5 text-[10px]">{deploying === world.id ? "Deploying..." : "Deploy Here"}</span>
-              )}
-            </button>
-          );
-        })}
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+        {worlds.map((world) => (
+          <div key={world.id} className={`px-3 py-2 text-xs ${world.isCurrent ? "text-gold-400" : world.unlocked ? "text-slate-300" : "text-slate-600"}`}>
+            <span className="font-display text-[10px]">{world.order}. {world.name}</span>
+            <span className="ml-2 text-slate-500">
+              {world.unlocked ? `${world.liberationPct}% liberated` : `🔒 ${world.xpRequirement.toLocaleString()} XP`}
+            </span>
+          </div>
+        ))}
       </div>
 
       {current && (
