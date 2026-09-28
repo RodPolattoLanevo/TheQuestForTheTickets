@@ -1,5 +1,6 @@
 import "./RegionMap.css";
 import regionMapArt from "./region-map.png";
+import deployedSwordIcon from "./deployed-sword.webp";
 
 // Adapted from a supplied pixel-art map package (region-map.png + a reference React
 // component) - see docs/ARCHITECTURE.md "Regions & shared liberation". The original
@@ -58,7 +59,7 @@ export function RegionMap({ regions, onDeploy, deploying }: RegionMapProps) {
         {regions.map((region, index) => {
           const coords = REGION_COORDS[region.key] ?? { x: 10 + index * 15, y: 90 };
           const locked = !region.unlocked;
-          const icon = locked ? "🔒" : region.isCurrent ? "⚔" : (region.theme && THEME_ICON[region.theme]) || String(index + 1);
+          const icon = locked ? "🔒" : (region.theme && THEME_ICON[region.theme]) || String(index + 1);
           const liberation = Math.max(0, Math.min(100, Math.round(region.liberationPct)));
           const status = locked
             ? `requires ${region.xpRequirement.toLocaleString()} XP`
@@ -76,7 +77,11 @@ export function RegionMap({ regions, onDeploy, deploying }: RegionMapProps) {
               title={`${region.name} — ${status}`}
             >
               <span className="region-map__marker-icon" aria-hidden="true">
-                {icon}
+                {region.isCurrent ? (
+                  <img className="region-map__marker-sword" src={deployedSwordIcon} alt="" draggable="false" />
+                ) : (
+                  icon
+                )}
               </span>
               <span className="region-map__marker-name">{region.name}</span>
             </button>

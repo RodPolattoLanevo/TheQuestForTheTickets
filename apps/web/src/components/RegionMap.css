@@ -54,6 +54,14 @@
   border-radius: 50%;
   box-shadow: 2px 2px 0 0 #000;
   font-size: clamp(13px, 1.5vw, 20px);
+  overflow: hidden;
+}
+
+.region-map__marker-sword {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  transform: rotate(-45deg); /* the source art points up-right; point it up to sit naturally in the round badge */
 }
 
 .region-map__marker-name {
