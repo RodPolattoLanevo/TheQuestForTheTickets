@@ -1,8 +1,8 @@
 // Defaults for local development. Override per-install via the extension's Options page
 // (stored in chrome.storage.local as apiUrlOverride/webUrlOverride) - useful once this is
 // pointed at a real deployed backend instead of localhost.
-export const DEFAULT_API_URL = "http://localhost:4000";
-export const DEFAULT_WEB_URL = "http://localhost:5173";
+export const DEFAULT_API_URL = "https://the-hunt-for-the-tickets-backend.vercel.app";
+export const DEFAULT_WEB_URL = "https://the-hunt-for-the-tickets.vercel.app";
 
 export async function getApiUrl() {
   const { apiUrlOverride } = await chrome.storage.local.get("apiUrlOverride");

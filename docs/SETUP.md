@@ -102,9 +102,11 @@ chrome://extensions → Enable Developer Mode → Load unpacked → select apps/
 ```
 
 The popup shares login state via `chrome.storage.local` - log in there with the same
-credentials. If your backend isn't on `localhost:4000`, open the extension's Options page
-to override the API/web URLs (also update `host_permissions` in `apps/extension/manifest.json`
-for a non-localhost deployment).
+credentials. It defaults to the deployed production backend/web URLs (see
+[`DEPLOYMENT.md`](DEPLOYMENT.md)); to point it at a local `npm run dev:backend` instead,
+open the extension's Options page and override the API/web URLs, and add
+`http://localhost:4000/*` back to `host_permissions` in `apps/extension/manifest.json` if
+it's not already there.
 
 **Zendesk sync (on-screen only)**: this build also ships a content script for
 `sacoa.zendesk.com`. It's manual and scoped to exactly what's on screen, on purpose - it

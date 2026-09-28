@@ -19,21 +19,31 @@ function renderLogin(error) {
   app.innerHTML = `
     <h1>⚔ The Hunt for the Tickets</h1>
     ${error ? `<p class="error">${error}</p>` : ""}
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password" />
-    <button id="loginBtn">Sign in</button>
-    <p style="font-size:11px;color:#6f6489;text-align:center;">Sign in with your existing account. New accounts are created on the full game website.</p>
+    <form id="loginForm" autocomplete="on">
+      <input id="email" name="username" type="email" placeholder="Email" autocomplete="username" required />
+      <input id="password" name="password" type="password" placeholder="Password" autocomplete="current-password" required />
+      <button type="submit">Sign in</button>
+    </form>
+    <a class="link" id="openSignup" href="#">Need an account? Sign up on the website →</a>
   `;
-  document.getElementById("loginBtn").addEventListener("click", async () => {
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
     try {
       const res = await apiFetch("/api/auth/login", { method: "POST", body: JSON.stringify({ email, password }) });
+      // Letting the browser's own password manager see this as a completed form submission
+      // (rather than tearing the form down instantly) is what lets it offer to save the
+      // credentials - only swap the view after the request resolves successfully.
       await setStoredToken(res.token);
       render();
     } catch (err) {
       renderLogin(err.message);
     }
+  });
+  document.getElementById("openSignup").addEventListener("click", async (e) => {
+    e.preventDefault();
+    chrome.tabs.create({ url: await getWebUrl() });
   });
 }
 

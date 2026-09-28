@@ -97,24 +97,19 @@ monorepo like this one.
 
 ## 4. Point the Chrome extension at the deployed backend
 
-The extension talks to whatever API/web URLs are set on its Options page (defaults to
-`localhost`) - nothing here needs a new build or a Chrome Web Store listing.
+Already done for this deployment: `apps/extension/config.js`'s `DEFAULT_API_URL`/
+`DEFAULT_WEB_URL` point at `the-hunt-for-the-tickets-backend.vercel.app` /
+`the-hunt-for-the-tickets.vercel.app`, and `host_permissions` in
+`apps/extension/manifest.json` includes the backend URL (Chrome enforces this for the
+popup/background service worker's own `fetch()` calls). Everyone who loads the extension
+unpacked from this repo gets the production URLs by default - no per-person setup needed.
+The `localhost` entries stay in both files too, for local dev against `npm run dev:backend`
+(override via the extension's Options page).
 
-1. Add the deployed backend URL to `host_permissions` in `apps/extension/manifest.json`
-   (Chrome enforces this for the popup/background service worker's own `fetch()` calls, the
-   same reason `http://localhost:4000/*` is already listed there):
-   ```json
-   "host_permissions": ["https://<backend-project>.vercel.app/*", "https://sacoa.zendesk.com/*"]
-   ```
-   (the `localhost` entries can stay too, for anyone still doing local dev against it).
-2. Open the extension's Options page, set:
-   - API URL -> `https://<backend-project>.vercel.app`
-   - Web URL -> `https://<web-project>.vercel.app`
-3. If you're distributing the extension to the rest of the team as a loaded-unpacked
-   folder (see `docs/SETUP.md` step 8), these become the defaults everyone gets - update
-   `apps/extension/options.js`'s fallback values to the production URLs too, so people
-   don't have to set this by hand, and reload the extension (`chrome://extensions` ->
-   reload) so the manifest change from step 1 takes effect.
+If you ever point this at a different Vercel deployment (a new project, a custom domain),
+update those same two spots - `DEFAULT_API_URL`/`DEFAULT_WEB_URL` in `config.js` and the
+matching entry in `host_permissions` - then everyone picks up the change next time they
+reload the extension (`chrome://extensions` -> reload), no reinstall needed.
 
 ## 5. Custom domain (optional)
 

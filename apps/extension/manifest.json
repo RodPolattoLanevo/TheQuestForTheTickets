@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "The Hunt for the Tickets",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Your RPG character's progress, right from the toolbar. Close tickets, earn XP, level up.",
   "action": {
     "default_popup": "popup.html",
@@ -14,7 +14,12 @@
     "type": "module"
   },
   "permissions": ["storage", "alarms", "notifications", "tabs"],
-  "host_permissions": ["http://localhost:4000/*", "http://localhost/*", "https://sacoa.zendesk.com/*"],
+  "host_permissions": [
+    "https://the-hunt-for-the-tickets-backend.vercel.app/*",
+    "http://localhost:4000/*",
+    "http://localhost/*",
+    "https://sacoa.zendesk.com/*"
+  ],
   "content_scripts": [
     {
       "matches": ["https://sacoa.zendesk.com/*"],
