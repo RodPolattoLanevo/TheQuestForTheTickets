@@ -4,8 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "cd ../.. && npm run build:packages",
     "dev": "tsx watch src/server.ts",
+    "prestart": "cd ../.. && npm run build:packages",
     "start": "tsx src/server.ts",
+    "prebuild": "cd ../.. && npm run build:packages",
     "build": "tsc -p tsconfig.json",
     "test": "vitest run"
   },

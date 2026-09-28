@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "cd ../.. && npm run build --workspace=packages/shared",
     "dev": "vite",
+    "prebuild": "cd ../.. && npm run build --workspace=packages/shared",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },
