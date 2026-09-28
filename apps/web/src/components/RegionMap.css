@@ -44,6 +44,36 @@
     0 0 8px #0a0820;
 }
 
+/* Soft glow over the patch of terrain the marker sits on - not just the badge - so hovering
+   makes it obvious which spot on the map you're about to deploy to. Sits behind the icon/
+   name (pseudo-element content paints before the button's real children). */
+.region-map__marker::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(90px, 14vw, 170px);
+  height: clamp(90px, 14vw, 170px);
+  transform: translate(-50%, -50%) scale(0.85);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 224, 102, 0.4) 0%, rgba(255, 224, 102, 0.16) 45%, transparent 72%);
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.region-map__marker:hover:not(:disabled)::before,
+.region-map__marker:focus-visible::before {
+  opacity: 1;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.region-map__marker.is-active::before {
+  background: radial-gradient(circle, rgba(255, 68, 51, 0.3) 0%, rgba(255, 68, 51, 0.1) 45%, transparent 72%);
+}
+
 .region-map__marker-icon {
   display: grid;
   place-items: center;
