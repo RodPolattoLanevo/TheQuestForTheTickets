@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { api, ApiError } from "../api/client";
 import { useToast } from "../context/ToastContext";
 import { XpBar } from "../components/XpBar";
+import { DungeonScreen, DungeonHudCell } from "../components/DungeonScreen";
 
 interface CharacterSummary {
   user: { displayName: string };
@@ -136,43 +137,39 @@ export function Dashboard() {
 
         <div className="mt-6 border-t border-ink-700 pt-5">
           {summary.combat ? (
-            <div className="flex gap-4">
-              {summary.combat.monster.image && (
-                <img
-                  src={summary.combat.monster.image}
-                  alt={summary.combat.monster.name}
-                  className="h-24 w-24 shrink-0 object-contain [image-rendering:auto] drop-shadow-[0_0_12px_rgba(240,102,58,0.25)]"
+            <div>
+              <DungeonScreen
+                theme={summary.world?.theme ?? null}
+                label={`${summary.combat.monster.isBoss ? "👑 " : ""}${summary.combat.monster.isElite ? "⭐ " : ""}${summary.combat.monster.name}`}
+                overlay={
+                  summary.combat.monster.image && (
+                    <img src={summary.combat.monster.image} alt={summary.combat.monster.name} className="dungeon-screen__monster" />
+                  )
+                }
+              >
+                <DungeonHudCell label="Monster HP" value={`${summary.combat.monsterHp} / ${summary.combat.monsterMaxHp}`} grow />
+                <DungeonHudCell
+                  label="Threat"
+                  value={summary.combat.monster.isBoss ? "Boss" : summary.combat.monster.isElite ? "Elite" : "Normal"}
                 />
-              )}
-              <div className="flex-1">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">
-                    {summary.combat.monster.isBoss && "👑 "}
-                    {summary.combat.monster.isElite && "⭐ "}
-                    {summary.combat.monster.name}
-                  </span>
-                  <span className="text-slate-400">
-                    {summary.combat.monsterHp} / {summary.combat.monsterMaxHp} HP
-                  </span>
-                </div>
-                <div className="xp-bar-track mt-1">
-                  <div className="hp-bar-fill" style={{ width: `${hpPct}%` }} />
-                </div>
-
-                {lastDamage ? (
-                  <p className={`mt-2 text-sm ${lastDamage.crit ? "text-ember-400 font-bold" : "text-slate-300"}`}>
-                    Your last closed ticket dealt {lastDamage.amount} damage{lastDamage.crit ? " — CRITICAL HIT!" : ""}
-                    {lastDamage.regionPct !== undefined && (
-                      <span className="ml-1 text-green-400">· Region now {lastDamage.regionPct}% liberated</span>
-                    )}
-                  </p>
-                ) : (
-                  <p className="mt-2 text-xs text-slate-500">
-                    There's no "Attack" button - every ticket you close lands a hit on this monster automatically.
-                    Your stats and gear decide how hard it hits.
-                  </p>
-                )}
+              </DungeonScreen>
+              <div className="xp-bar-track mt-2">
+                <div className="hp-bar-fill" style={{ width: `${hpPct}%` }} />
               </div>
+
+              {lastDamage ? (
+                <p className={`mt-2 text-sm ${lastDamage.crit ? "text-ember-400 font-bold" : "text-slate-300"}`}>
+                  Your last closed ticket dealt {lastDamage.amount} damage{lastDamage.crit ? " — CRITICAL HIT!" : ""}
+                  {lastDamage.regionPct !== undefined && (
+                    <span className="ml-1 text-green-400">· Region now {lastDamage.regionPct}% liberated</span>
+                  )}
+                </p>
+              ) : (
+                <p className="mt-2 text-xs text-slate-500">
+                  There's no "Attack" button - every ticket you close lands a hit on this monster automatically.
+                  Your stats and gear decide how hard it hits.
+                </p>
+              )}
             </div>
           ) : (
             <p className="text-sm text-slate-400">No active encounter. You've cleared every world currently configured — check back after a content update!</p>

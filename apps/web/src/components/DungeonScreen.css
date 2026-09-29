@@ -1,0 +1,95 @@
+/* First-person dungeon-crawler viewport: scene art + a bolted-on HUD bar underneath,
+   in the site's ink/gold/ember 16-bit theme (see index.css .panel for the shared bevel). */
+
+.dungeon-screen {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.dungeon-screen__viewport {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0a0820;
+}
+
+.dungeon-screen__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+
+/* Darkens the top/edges so the pixel-font label and HUD stay legible over any scene. */
+.dungeon-screen__vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(10, 8, 32, 0.75) 0%, transparent 22%),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+  pointer-events: none;
+}
+
+.dungeon-screen__label {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(9px, 1.6vw, 13px);
+  color: #ffe066;
+  text-shadow:
+    2px 2px 0 #000,
+    -1px -1px 0 #000;
+}
+
+.dungeon-screen__monster {
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  transform: translateX(-50%);
+  height: 62%;
+  width: auto;
+  max-width: 55%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.6));
+}
+
+.dungeon-screen__hud {
+  display: flex;
+  border-top: 3px solid #000;
+  background: #120e33; /* ink-900 */
+}
+
+.dungeon-hud-cell {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 6px;
+  border-right: 2px solid #000;
+  box-shadow: inset 0 2px 0 0 #2a2170;
+}
+.dungeon-hud-cell:last-child {
+  border-right: 0;
+}
+.dungeon-hud-cell--grow {
+  flex: 2;
+}
+
+.dungeon-hud-cell__label {
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6f6489;
+}
+
+.dungeon-hud-cell__value {
+  font-family: "Press Start 2P", monospace;
+  font-size: clamp(10px, 1.4vw, 13px);
+  color: #ffe066;
+}

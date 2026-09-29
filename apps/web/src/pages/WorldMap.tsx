@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "../api/client";
 import { useToast } from "../context/ToastContext";
 import { RegionMap } from "../components/RegionMap";
+import { DungeonScreen, DungeonHudCell } from "../components/DungeonScreen";
 
 interface Monster {
   id: string;
@@ -107,24 +108,25 @@ export function WorldMap() {
       </div>
 
       {current && (
-        <div className="panel mt-6 p-5">
-          <h2 className="font-display text-sm text-gold-400">
-            ▶ Deployed: {current.name}
-          </h2>
-          <p className="mt-1 text-sm text-slate-400">{current.description}</p>
+        <div className="mt-6">
+          <DungeonScreen theme={current.theme} label={`▶ ${current.name}`}>
+            <DungeonHudCell label="Liberation" value={<span className="text-green-400">{current.liberationPct}%</span>} />
+            <DungeonHudCell
+              label="Monsters"
+              value={`${current.monsters.filter((m) => m.defeated).length}/${current.monsters.length}`}
+            />
+            <DungeonHudCell
+              label="Status"
+              value={current.liberationPct >= 100 ? "Liberated" : "Active"}
+              grow
+            />
+          </DungeonScreen>
 
-          <div className="mt-3">
-            <div className="flex items-center justify-between text-xs text-slate-400">
-              <span className="uppercase tracking-wide">Regional Liberation</span>
-              <span className="text-green-400">{current.liberationPct}%</span>
-            </div>
-            <div className="xp-bar-track mt-1">
-              <div className="liberation-bar-fill" style={{ width: `${current.liberationPct}%` }} />
-            </div>
-          </div>
+          <div className="panel mt-3 p-5">
+            <p className="text-sm text-slate-400">{current.description}</p>
 
-          <h3 className="mt-5 font-display text-xs text-gold-400">Monster Roster</h3>
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+            <h3 className="mt-4 font-display text-xs text-gold-400">Monster Roster</h3>
+            <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {current.monsters.map((m) => (
               <div
                 key={m.id}
@@ -157,6 +159,7 @@ export function WorldMap() {
                 {m.defeated && <p className="text-[10px] uppercase tracking-wide text-green-400">Defeated</p>}
               </div>
             ))}
+            </div>
           </div>
         </div>
       )}

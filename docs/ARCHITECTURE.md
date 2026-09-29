@@ -166,6 +166,18 @@ so the UI does **not** force `image-rendering: pixelated` on them (that class is
 for genuinely blocky, low-res source images, like the world map background - forcing it on
 a large source image scaled down doesn't do anything useful and can look worse).
 
+### Region scenes and the "dungeon viewport"
+
+Combat/region screens (Dashboard's current encounter, the Region Map's deployed-region
+panel) render through `apps/web/src/components/DungeonScreen.tsx` - a first-person
+viewport in the style of a classic dungeon crawler (Dungeon Master/Eye of the Beholder):
+a bordered scene (one atmospheric background per region, `apps/web/public/regions/`,
+looked up by `World.theme` since both pages already have that field on hand) with an
+optional sprite standing in it (the current monster, via the `overlay` prop) and a HUD bar
+bolted underneath (`DungeonHudCell` - readouts like HP, liberation %, or defeated count).
+It's presentational only, same pattern as `RegionMap` - the pages that use it own all the
+actual data-fetching and combat logic.
+
 `apps/web/scripts/pixelPng.mjs` (a from-scratch PNG encoder, no image library dependency)
 and `gen-boss-village-elder-troll.mjs` (its one example script) are kept as an alternative
 path for genuinely from-scratch, code-generated low-res pixel art, if that's ever preferred
