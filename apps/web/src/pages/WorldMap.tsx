@@ -123,31 +123,38 @@ export function WorldMap() {
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <h3 className="mt-5 font-display text-xs text-gold-400">Monster Roster</h3>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {current.monsters.map((m) => (
               <div
                 key={m.id}
-                className={`flex items-center gap-3 border px-3 py-2 text-xs ${
-                  m.defeated ? "border-green-700 bg-green-900/20" : "border-ink-700 bg-ink-800/60"
+                className={`panel flex flex-col items-center gap-1.5 p-3 text-center ${
+                  m.isBoss ? "border-ember-500" : ""
                 }`}
               >
-                {m.image && (
-                  <img
-                    src={m.image}
-                    alt={m.name}
-                    className={`h-12 w-12 shrink-0 object-contain [image-rendering:pixelated] ${m.defeated ? "grayscale opacity-60" : ""}`}
-                  />
-                )}
-                <div>
-                  <p className={`font-medium ${RARITY_COLOR[m.rarity] ?? "text-slate-300"}`}>
-                    {m.isBoss && "👑 "}
-                    {m.isElite && "⭐ "}
-                    {m.name}
-                  </p>
-                  <p className="text-slate-500">
-                    Lv {m.level} · {m.hp} HP {m.defeated && "· ✓ Defeated"}
-                  </p>
+                <div className="relative flex h-20 w-20 items-center justify-center bg-ink-950">
+                  {m.image ? (
+                    <img
+                      src={m.image}
+                      alt={m.name}
+                      className={`h-full w-full object-contain [image-rendering:auto] ${m.defeated ? "grayscale opacity-50" : ""}`}
+                    />
+                  ) : (
+                    <span className="text-3xl opacity-40">❓</span>
+                  )}
+                  {m.defeated && (
+                    <span className="absolute inset-0 flex items-center justify-center text-2xl text-green-400">✓</span>
+                  )}
                 </div>
+                <p className={`text-[11px] font-medium leading-tight ${RARITY_COLOR[m.rarity] ?? "text-slate-300"}`}>
+                  {m.isBoss && "👑 "}
+                  {m.isElite && "⭐ "}
+                  {m.name}
+                </p>
+                <p className="text-[10px] text-slate-500">
+                  Lv {m.level} · {m.hp} HP
+                </p>
+                {m.defeated && <p className="text-[10px] uppercase tracking-wide text-green-400">Defeated</p>}
               </div>
             ))}
           </div>

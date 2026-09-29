@@ -154,23 +154,22 @@ presentational, driven by the same `World[]` from `GET /api/worlds`.
 
 ## Character/monster art
 
-Original, hand-designed pixel art - never copyrighted game assets (spec section 4/6).
-`Monster.image` (and eventually `Item.previewImage`, character appearance layers) is just
-a path served from `apps/web/public/`; the UI renders it with `image-rendering: pixelated`
-so a small source image stays crisp when scaled up, instead of blurring like a normal
-photo would.
+Original art, never copyrighted game assets (spec section 4/6). `Monster.image` (and
+eventually `Item.previewImage`, character appearance layers) is just a path served from
+`apps/web/public/monsters/`, referenced in `packages/database/prisma/seed.ts` per monster
+row (or set via `PUT /api/admin/monsters/:id` for one that already exists).
 
-Sprites are authored as code, not drawn in an external editor: `apps/web/scripts/pixelPng.mjs`
-is a from-scratch PNG encoder (no image library dependency) plus tiny drawing helpers
-(`rect`, `ellipse`, `stairs` for horn/spike silhouettes, `outline` to auto-border a
-silhouette). Each sprite gets its own `apps/web/scripts/gen-<name>.mjs` script that paints
-a low-res pixel grid (e.g. 28x34) and writes a `.png` into `apps/web/public/monsters/`.
+All 13 current monsters (`packages/database/prisma/seed.ts` monster defs) have art -
+`.webp` files supplied by the team and dropped straight into `public/monsters/`. These are
+higher-resolution painted-pixel-style illustrations rather than true low-res pixel grids,
+so the UI does **not** force `image-rendering: pixelated` on them (that class is reserved
+for genuinely blocky, low-res source images, like the world map background - forcing it on
+a large source image scaled down doesn't do anything useful and can look worse).
 
-Only one example exists so far: `gen-boss-village-elder-troll.mjs` → the World 1 boss. To
-add another, copy that script, adjust the palette/coordinates, run it with `node
-apps/web/scripts/gen-<name>.mjs`, and set the new path on the relevant `Monster.image` (or
-`Item.previewImage`) row - via `packages/database/prisma/seed.ts` for seed content, or
-`PUT /api/admin/monsters/:id` for a monster that already exists.
+`apps/web/scripts/pixelPng.mjs` (a from-scratch PNG encoder, no image library dependency)
+and `gen-boss-village-elder-troll.mjs` (its one example script) are kept as an alternative
+path for genuinely from-scratch, code-generated low-res pixel art, if that's ever preferred
+over a supplied image for a specific sprite - not the primary way art gets added anymore.
 
 ## Chrome extension
 

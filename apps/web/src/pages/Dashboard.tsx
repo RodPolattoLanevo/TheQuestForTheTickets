@@ -141,7 +141,7 @@ export function Dashboard() {
                 <img
                   src={summary.combat.monster.image}
                   alt={summary.combat.monster.name}
-                  className="h-24 w-24 shrink-0 object-contain [image-rendering:pixelated] drop-shadow-[0_0_12px_rgba(240,102,58,0.25)]"
+                  className="h-24 w-24 shrink-0 object-contain [image-rendering:auto] drop-shadow-[0_0_12px_rgba(240,102,58,0.25)]"
                 />
               )}
               <div className="flex-1">
