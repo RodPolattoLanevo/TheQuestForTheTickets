@@ -73,23 +73,30 @@ const appearanceSchema = z.object({
   hair: z.string().nullable().optional(),
   face: z.string().nullable().optional(),
   body: z.string().nullable().optional(),
+  // Reserved slots - no selectable presets exist yet, but the field/endpoint is ready.
+  torso: z.string().nullable().optional(),
+  hands: z.string().nullable().optional(),
+  pants: z.string().nullable().optional(),
+  boots: z.string().nullable().optional(),
 });
 
-// Base appearance (head/hair/face/body) uses free-form preset keys rather than shop
-// items - these are the free original placeholder options from spec section 4, not
-// purchasable cosmetics.
+// Base appearance (head/hair/face/body/torso/hands/pants/boots) uses free-form preset
+// keys rather than shop items - these are the free original placeholder options from
+// spec section 4, not purchasable cosmetics.
 meRouter.post("/appearance", async (req, res) => {
   const parsed = appearanceSchema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
-  await prisma.character.update({
-    where: { userId: req.auth!.sub },
-    data: {
-      equippedHead: parsed.data.head,
-      equippedHair: parsed.data.hair,
-      equippedFace: parsed.data.face,
-      equippedBody: parsed.data.body,
-    },
-  });
+  const data: Record<string, string | null> = {};
+  if ("head" in parsed.data) data.equippedHead = parsed.data.head ?? null;
+  if ("hair" in parsed.data) data.equippedHair = parsed.data.hair ?? null;
+  if ("face" in parsed.data) data.equippedFace = parsed.data.face ?? null;
+  if ("body" in parsed.data) data.equippedBody = parsed.data.body ?? null;
+  if ("torso" in parsed.data) data.equippedTorso = parsed.data.torso ?? null;
+  if ("hands" in parsed.data) data.equippedHands = parsed.data.hands ?? null;
+  if ("pants" in parsed.data) data.equippedPants = parsed.data.pants ?? null;
+  if ("boots" in parsed.data) data.equippedBoots = parsed.data.boots ?? null;
+
+  await prisma.character.update({ where: { userId: req.auth!.sub }, data });
   res.json(await buildCharacterSummary(req.auth!.sub));
 });

@@ -72,6 +72,12 @@ model Character {
   equippedHair       String?
   equippedFace       String?
   equippedBody       String?
+  // Reserved appearance slots - schema is ready but no selectable presets exist yet
+  // for these, unlike head/hair/face/body above.
+  equippedTorso      String?
+  equippedHands      String?
+  equippedPants      String?
+  equippedBoots      String?
   equippedArmorId    String?
   equippedWeaponId   String?
   equippedAccessoryId String?

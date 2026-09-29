@@ -61,6 +61,16 @@ export async function buildCharacterSummary(userId: string) {
     stats: character.stats,
     maxHp: character.stats ? maxHpForLevel(progress.level, character.stats.defense) : maxHpForLevel(progress.level, 0),
     equipped,
+    appearance: {
+      head: character.equippedHead,
+      hair: character.equippedHair,
+      face: character.equippedFace,
+      body: character.equippedBody,
+      torso: character.equippedTorso,
+      hands: character.equippedHands,
+      pants: character.equippedPants,
+      boots: character.equippedBoots,
+    },
     combat: session
       ? {
           sessionId: session.id,
