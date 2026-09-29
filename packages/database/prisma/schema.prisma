@@ -206,6 +206,7 @@ model Monster {
 
   combatSessions     CombatSession[]
 
+  @@index([isBoss])
   @@map("monsters")
 }
 
@@ -221,6 +222,7 @@ model CombatSession {
   startedAt      DateTime     @default(now())
   completedAt    DateTime?
 
+  @@index([characterId, status])
   @@map("combat_sessions")
 }
 
@@ -304,6 +306,7 @@ model RewardTransaction {
   actorUser      User?        @relation("RewardTransactionActor", fields: [actorUserId], references: [id])
   createdAt      DateTime     @default(now())
 
+  @@index([userId])
   @@map("reward_transactions")
 }
 

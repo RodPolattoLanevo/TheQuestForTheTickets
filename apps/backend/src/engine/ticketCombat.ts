@@ -37,11 +37,10 @@ async function contributeToRegionLiberation(worldId: string, amount: number): Pr
  */
 export async function resolveTicketCombat(userId: string, ticketExternalId: string): Promise<TicketCombatOutcome> {
   const character = await prisma.character.findUniqueOrThrow({ where: { userId }, include: { stats: true } });
-  const session = await getOrCreateActiveSession(character.id);
+  const session = await getOrCreateActiveSession(character.id, character.currentWorldId);
   if (!session) return { ticketExternalId, attacked: false };
 
-  const { power } = await getCombatPowerForCharacter(character.id);
-  const curve = await getLevelCurve();
+  const [{ power }, curve] = await Promise.all([getCombatPowerForCharacter(character, character.stats!), getLevelCurve()]);
   const level = computeLevelProgress(character.xp, curve).level;
   const playerMaxHp = maxHpForLevel(level, character.stats!.defense);
 
@@ -78,15 +77,18 @@ export async function resolveTicketCombat(userId: string, ticketExternalId: stri
   // Luck grants a chance at bonus coins on top of the monster's base drop - the "loot" moment.
   const bonusCoins = Math.random() < power.rewardBonus ? Math.round(monster.coinReward * 0.5) : 0;
 
-  const reward = await grantReward({
-    userId,
-    source: "COMBAT",
-    xp: monster.xpReward,
-    coins: monster.coinReward + bonusCoins,
-    reason: `Defeated ${monster.name}${monster.isBoss ? " (Boss)" : ""} by closing ticket ${ticketExternalId}`,
-  });
+  const reward = await grantReward(
+    {
+      userId,
+      source: "COMBAT",
+      xp: monster.xpReward,
+      coins: monster.coinReward + bonusCoins,
+      reason: `Defeated ${monster.name}${monster.isBoss ? " (Boss)" : ""} by closing ticket ${ticketExternalId}`,
+    },
+    curve
+  );
 
-  await advanceWorldIfCleared(character.id);
+  await advanceWorldIfCleared(character.id, character.currentWorldId!);
 
   return {
     ticketExternalId,

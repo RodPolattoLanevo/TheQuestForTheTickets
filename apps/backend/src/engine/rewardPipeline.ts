@@ -48,8 +48,7 @@ export async function ingestRawTickets(provider: string, rawTickets: RawTicket[]
     combatOutcomes: [],
     unlockedAchievements: [],
   };
-  const rules = await getActiveCategoryRules();
-  const reopenPolicy = await getReopenPolicy();
+  const [rules, reopenPolicy] = await Promise.all([getActiveCategoryRules(), getReopenPolicy()]);
 
   for (const raw of rawTickets) {
     result.ticketsSeen += 1;
@@ -138,19 +137,22 @@ async function processTicket(
   const event = await createEvent(ticket.id, raw.eventId, "solved", true, null, true);
   result.eventsCreated += 1;
 
-  await grantReward({
-    userId: ticket.userId,
-    source: "ZENDESK_TICKET",
-    xp: reward.xp,
-    coins: reward.coins,
-    ticketId: ticket.id,
-    eventId: event.id,
-    category: reward.difficulty,
-    provider,
-    reason: `Ticket ${raw.externalId} (${reward.difficulty})`,
-  });
-
-  await prisma.ticket.update({ where: { id: ticket.id }, data: { solvedCount: { increment: 1 } } });
+  // Independent of each other - granting the ticket's XP/coins doesn't need to wait on the
+  // solvedCount bump, or vice versa.
+  await Promise.all([
+    grantReward({
+      userId: ticket.userId,
+      source: "ZENDESK_TICKET",
+      xp: reward.xp,
+      coins: reward.coins,
+      ticketId: ticket.id,
+      eventId: event.id,
+      category: reward.difficulty,
+      provider,
+      reason: `Ticket ${raw.externalId} (${reward.difficulty})`,
+    }),
+    prisma.ticket.update({ where: { id: ticket.id }, data: { solvedCount: { increment: 1 } } }),
+  ]);
   result.rewardsGranted += 1;
 
   // There is no manual "Attack" button - closing this ticket IS the attack. Resolved before
@@ -158,8 +160,11 @@ async function processTicket(
   const combatOutcome = await resolveTicketCombat(ticket.userId, raw.externalId);
   result.combatOutcomes.push(combatOutcome);
 
-  await addTeamEventDamage(ticket.userId, reward.xp);
-  const { unlockedAchievements } = await refreshProgressForUser(ticket.userId);
+  // Team-event damage and achievement/quest progress don't depend on each other either.
+  const [, { unlockedAchievements }] = await Promise.all([
+    addTeamEventDamage(ticket.userId, reward.xp),
+    refreshProgressForUser(ticket.userId),
+  ]);
   result.unlockedAchievements.push(...unlockedAchievements);
 }
 

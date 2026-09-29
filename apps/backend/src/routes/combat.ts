@@ -15,7 +15,7 @@ combatRouter.use(requireAuth);
  */
 combatRouter.get("/current", async (req, res) => {
   const character = await prisma.character.findUniqueOrThrow({ where: { userId: req.auth!.sub } });
-  const session = await getOrCreateActiveSession(character.id);
+  const session = await getOrCreateActiveSession(character.id, character.currentWorldId);
   if (!session) return res.json({ session: null, worldCleared: true });
   res.json({ session });
 });

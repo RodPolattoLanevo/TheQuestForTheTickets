@@ -1,4 +1,4 @@
-import { getPrismaClient } from "@hunt/database";
+import { getPrismaClient, type Character, type CharacterStats } from "@hunt/database";
 import { deriveCombatPower, type CombatStats } from "@hunt/game-engine";
 
 const prisma = getPrismaClient();
@@ -14,9 +14,13 @@ const EQUIPPED_ITEM_FIELDS = [
   "equippedBackgroundId",
 ] as const;
 
-/** Sums statBonuses JSON across every equipped (gameplay-affecting) item. */
-export async function getEquipmentBonus(characterId: string): Promise<Partial<CombatStats>> {
-  const character = await prisma.character.findUniqueOrThrow({ where: { id: characterId } });
+/**
+ * Sums statBonuses JSON across every equipped (gameplay-affecting) item. Takes the
+ * character row directly (just the 8 equipped-item-id columns) rather than a characterId -
+ * every caller already has the full Character row loaded, so re-fetching it here would just
+ * be re-reading columns already in memory.
+ */
+export async function getEquipmentBonus(character: Pick<Character, (typeof EQUIPPED_ITEM_FIELDS)[number]>): Promise<Partial<CombatStats>> {
   const itemIds = EQUIPPED_ITEM_FIELDS.map((f) => character[f]).filter((v): v is string => Boolean(v));
   if (itemIds.length === 0) return {};
 
@@ -48,9 +52,13 @@ export async function assignStartingWorldIfNeeded(characterId: string): Promise<
   await prisma.character.update({ where: { id: characterId }, data: { currentWorldId: firstWorld.id, currentStageId: firstStage?.id } });
 }
 
-export async function getCombatPowerForCharacter(characterId: string) {
-  const stats = await prisma.characterStats.findUniqueOrThrow({ where: { characterId } });
-  const bonus = await getEquipmentBonus(characterId);
+/**
+ * Takes the already-loaded Character and CharacterStats rows directly - every caller has
+ * both in hand (usually from one `findUniqueOrThrow({ include: { stats: true } })`), so
+ * this used to silently re-fetch both from scratch on every call.
+ */
+export async function getCombatPowerForCharacter(character: Character, stats: CharacterStats) {
+  const bonus = await getEquipmentBonus(character);
   const power = deriveCombatPower(
     { strength: stats.strength, defense: stats.defense, agility: stats.agility, magic: stats.magic, luck: stats.luck },
     bonus

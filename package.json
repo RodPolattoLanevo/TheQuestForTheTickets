@@ -16,7 +16,8 @@
     "db:generate": "npm run db:generate --workspace=packages/database",
     "db:migrate": "npm run db:migrate --workspace=packages/database",
     "db:migrate:deploy": "npm run db:migrate:deploy --workspace=packages/database",
-    "db:seed": "npm run db:seed --workspace=packages/database"
+    "db:seed": "npm run db:seed --workspace=packages/database",
+    "db:backup": "npm run db:backup --workspace=packages/database"
   },
   "devDependencies": {
     "typescript": "^5.6.3"

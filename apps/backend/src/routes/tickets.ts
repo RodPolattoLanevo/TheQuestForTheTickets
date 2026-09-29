@@ -4,7 +4,6 @@ import { getPrismaClient } from "@hunt/database";
 import { requireAuth } from "../auth/middleware.js";
 import { mockProvider } from "../providers/registry.js";
 import { runSync } from "../engine/sync.js";
-import { buildCharacterSummary } from "../engine/serialize.js";
 
 const prisma = getPrismaClient();
 export const ticketsRouter = Router();
@@ -43,5 +42,15 @@ ticketsRouter.post("/dev/simulate-ticket", async (req, res) => {
   mockProvider.simulate({ ...parsed.data, employeeExternalId });
   const syncResult = await runSync("mock");
 
-  res.json({ syncResult, character: await buildCharacterSummary(req.auth!.sub) });
+  // The frontend (Dashboard.tsx) doesn't read this field - it refreshes via GET /api/me
+  // right after - so this is intentionally a minimal projection (1 query), not the full
+  // buildCharacterSummary() (~6 queries: level curve, equipped items, active combat
+  // session, recent transactions). Kept only because the e2e test suite asserts on
+  // response.character.xp/coins as a quick sanity check without a second round trip.
+  const character = await prisma.character.findUniqueOrThrow({
+    where: { userId: req.auth!.sub },
+    select: { xp: true, coins: true, level: true },
+  });
+
+  res.json({ syncResult, character });
 });

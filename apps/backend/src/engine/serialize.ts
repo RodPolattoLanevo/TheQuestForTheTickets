@@ -35,7 +35,7 @@ export async function buildCharacterSummary(userId: string) {
     EQUIPPED_FIELDS.map(([field, slot]) => [slot, character[field] ? itemById.get(character[field]!) ?? null : null])
   );
 
-  const session = await getOrCreateActiveSession(character.id);
+  const session = await getOrCreateActiveSession(character.id, character.currentWorldId);
 
   const recentTransactions = await prisma.rewardTransaction.findMany({
     where: { userId },

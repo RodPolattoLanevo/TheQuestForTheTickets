@@ -17,3 +17,4 @@ coverage/
 Thumbs.db
 *.log
 .claude/scheduled_tasks.lock
+packages/database/backups/

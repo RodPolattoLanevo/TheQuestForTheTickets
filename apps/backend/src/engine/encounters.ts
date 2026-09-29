@@ -19,11 +19,11 @@ export async function selectNextMonster(worldId: string, characterId: string) {
 /**
  * Ensures the character has an IN_PROGRESS combat session in their current world, creating
  * one against the next undefeated monster if needed. Returns null if the world has no more
- * monsters left to fight (fully cleared).
+ * monsters left to fight (fully cleared). Takes `currentWorldId` directly rather than
+ * re-fetching the Character row - every caller already has it in scope from its own query.
  */
-export async function getOrCreateActiveSession(characterId: string) {
-  const character = await prisma.character.findUniqueOrThrow({ where: { id: characterId } });
-  if (!character.currentWorldId) return null;
+export async function getOrCreateActiveSession(characterId: string, currentWorldId: string | null) {
+  if (!currentWorldId) return null;
 
   const existing = await prisma.combatSession.findFirst({
     where: { characterId, status: "IN_PROGRESS" },
@@ -32,7 +32,7 @@ export async function getOrCreateActiveSession(characterId: string) {
   });
   if (existing) return existing;
 
-  const monster = await selectNextMonster(character.currentWorldId, characterId);
+  const monster = await selectNextMonster(currentWorldId, characterId);
   if (!monster) return null;
 
   const session = await prisma.combatSession.create({
@@ -42,15 +42,15 @@ export async function getOrCreateActiveSession(characterId: string) {
   return session;
 }
 
-/** After a boss falls, moves the character on to the next world (if any). */
-export async function advanceWorldIfCleared(characterId: string) {
-  const character = await prisma.character.findUniqueOrThrow({ where: { id: characterId } });
-  if (!character.currentWorldId) return;
-
-  const remaining = await selectNextMonster(character.currentWorldId, characterId);
+/**
+ * After a boss falls, moves the character on to the next world (if any). Takes
+ * `currentWorldId` directly, same reasoning as getOrCreateActiveSession above.
+ */
+export async function advanceWorldIfCleared(characterId: string, currentWorldId: string) {
+  const remaining = await selectNextMonster(currentWorldId, characterId);
   if (remaining) return; // world not cleared yet
 
-  const currentWorld = await prisma.world.findUniqueOrThrow({ where: { id: character.currentWorldId } });
+  const currentWorld = await prisma.world.findUniqueOrThrow({ where: { id: currentWorldId } });
   const nextWorld = await prisma.world.findFirst({ where: { order: { gt: currentWorld.order }, active: true }, orderBy: { order: "asc" } });
   if (!nextWorld) return; // no more content yet - stays in the final world
 

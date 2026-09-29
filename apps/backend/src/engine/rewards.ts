@@ -1,5 +1,6 @@
 import { getPrismaClient, type ActorType, type RewardSource } from "@hunt/database";
 import { computeLevelProgress } from "@hunt/game-engine";
+import type { LevelCurveConfig } from "@hunt/shared";
 import { getLevelCurve } from "./gameConfig.js";
 
 const prisma = getPrismaClient();
@@ -34,19 +35,23 @@ export interface GrantRewardResult {
  * pipeline, combat victories, quest claims, achievement unlocks, and admin grants -
  * goes through here so the audit log (RewardTransaction) is complete and the server
  * stays authoritative for XP/coins (spec section 21: client is never the source of truth).
+ *
+ * `curve` is optional - pass it when the caller already fetched the level-curve setting for
+ * its own use moments earlier (e.g. resolveTicketCombat), to skip re-querying the same
+ * IntegrationSetting row.
  */
-export async function grantReward(input: GrantRewardInput): Promise<GrantRewardResult> {
+export async function grantReward(input: GrantRewardInput, curve?: LevelCurveConfig): Promise<GrantRewardResult> {
   const xp = input.xp ?? 0;
   const coins = input.coins ?? 0;
-  const curve = await getLevelCurve();
+  const resolvedCurve = curve ?? (await getLevelCurve());
 
   return prisma.$transaction(async (tx) => {
     const character = await tx.character.findUniqueOrThrow({ where: { userId: input.userId } });
-    const levelBefore = computeLevelProgress(character.xp, curve).level;
+    const levelBefore = computeLevelProgress(character.xp, resolvedCurve).level;
 
     const newXp = Math.max(0, character.xp + xp);
     const newCoins = Math.max(0, character.coins + coins);
-    const levelAfter = computeLevelProgress(newXp, curve).level;
+    const levelAfter = computeLevelProgress(newXp, resolvedCurve).level;
 
     await tx.character.update({
       where: { userId: input.userId },
