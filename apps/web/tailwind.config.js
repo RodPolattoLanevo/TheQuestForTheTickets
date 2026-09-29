@@ -4,36 +4,36 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Deep navy/indigo "SNES-era JRPG menu" palette - kept the same token names
-        // (ink/gold/ember) so every existing className in the app repaints automatically.
+        // Dark tooled-leather / old-tome palette - kept the same token names (ink/gold/ember)
+        // so every existing className in the app repaints automatically.
         ink: {
-          950: "#0a0820",
-          900: "#120e33",
-          800: "#1c1650",
-          700: "#2a2170",
-          600: "#3d3296",
+          950: "#120c08",
+          900: "#1c140d",
+          800: "#291d12",
+          700: "#3a2a18",
+          600: "#4d3820",
         },
         gold: {
-          400: "#ffe066",
-          500: "#ffc42e",
-          600: "#d99a00",
+          400: "#e8cb7d",
+          500: "#c9a227",
+          600: "#8f721b",
         },
         ember: {
-          400: "#ff7a6b",
-          500: "#ff4433",
+          400: "#c1594a",
+          500: "#8f2a22",
         },
       },
       fontFamily: {
-        // Pixel/bitmap display font for headers, numbers, buttons, nav - the load-bearing
-        // "16-bit menu" signal. Body copy stays on a normal sans so dense text (reward
-        // lists, admin tables) stays legible.
-        display: ["\"Press Start 2P\"", "monospace"],
-        body: ["Inter", "system-ui", "sans-serif"],
+        // Engraved-title serif for headers, numbers, buttons, nav; an old-book serif for
+        // dense body copy (reward lists, admin tables) so it stays legible at small sizes.
+        display: ["Cinzel", "Georgia", "serif"],
+        decorative: ["\"Cinzel Decorative\"", "Cinzel", "Georgia", "serif"],
+        body: ["\"EB Garamond\"", "Georgia", "serif"],
       },
       boxShadow: {
-        glow: "0 0 0 3px rgba(255, 196, 46, 0.5), 0 0 16px rgba(255, 196, 46, 0.35)",
-        pixel: "3px 3px 0 0 #000",
-        "pixel-sm": "2px 2px 0 0 #000",
+        glow: "0 0 0 2px rgba(201, 162, 39, 0.55), 0 0 20px rgba(201, 162, 39, 0.4)",
+        engraved: "inset 0 2px 4px rgba(0, 0, 0, 0.7), inset 0 -1px 0 rgba(255, 224, 160, 0.06)",
+        embossed: "0 1px 0 rgba(255, 224, 160, 0.12), 0 2px 6px rgba(0, 0, 0, 0.6)",
       },
     },
   },

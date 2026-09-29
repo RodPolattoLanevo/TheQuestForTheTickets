@@ -10,92 +10,125 @@
   }
 }
 
-/* Pixel fonts render crisp at their native sizes, not smoothed like a modern typeface. */
 .font-display {
-  -webkit-font-smoothing: none;
-  font-smooth: never;
-  line-height: 1.6;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.04em;
+}
+
+.font-decorative {
+  letter-spacing: 0.06em;
 }
 
 body {
-  background-color: #0a0820;
+  background-color: #0f0a06;
   background-image:
-    radial-gradient(900px 500px at 15% -10%, rgba(255, 196, 46, 0.07), transparent),
-    radial-gradient(900px 500px at 110% 10%, rgba(255, 68, 51, 0.07), transparent),
-    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.015) 0px, rgba(255, 255, 255, 0.015) 2px, transparent 2px, transparent 8px);
-  image-rendering: pixelated;
+    radial-gradient(1100px 650px at 50% -10%, rgba(201, 162, 39, 0.09), transparent),
+    radial-gradient(900px 600px at 100% 100%, rgba(143, 42, 34, 0.1), transparent),
+    repeating-linear-gradient(
+      135deg,
+      rgba(255, 224, 160, 0.015) 0px,
+      rgba(255, 224, 160, 0.015) 1px,
+      transparent 1px,
+      transparent 3px
+    );
 }
 
-/* Faint CRT scanlines over the whole app - a classic 16-bit-TV texture, subtle enough not to hurt readability. */
+/* Faint vignette framing the whole viewport, like torchlight not reaching the edges of a hall. */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   z-index: 9999;
   pointer-events: none;
-  background: repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.16) 0px, rgba(0, 0, 0, 0.16) 1px, transparent 1px, transparent 3px);
-  mix-blend-mode: overlay;
-  opacity: 0.35;
+  box-shadow: inset 0 0 180px rgba(0, 0, 0, 0.65);
 }
 
-/* --- "Game window" panel: hard black outline + a light inset bevel, flat corners ------- */
+/* --- Ornate frame: gold double-rule border, engraved inset, gilded corner flourishes ---- */
 .panel {
-  @apply relative border-[3px] border-black bg-ink-900;
+  @apply relative border border-gold-600/70 bg-ink-900;
   box-shadow:
-    inset 0 0 0 2px #4a3fb0,
-    4px 4px 0 0 rgba(0, 0, 0, 0.65);
+    inset 0 0 0 1px rgba(201, 162, 39, 0.28),
+    inset 0 2px 4px rgba(0, 0, 0, 0.7),
+    0 4px 14px rgba(0, 0, 0, 0.55);
+  background-image: linear-gradient(180deg, rgba(255, 224, 160, 0.04), transparent 40%);
 }
 
-/* --- Buttons: classic raised pixel-bevel, presses flat on click ------------------------ */
+.panel::before,
+.panel::after {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Cpath d='M2 38 C2 20 20 2 38 2' stroke='%23c9a227' stroke-width='1.6' fill='none'/%3E%3Ccircle cx='38' cy='2' r='2.4' fill='%23c9a227'/%3E%3Ccircle cx='2' cy='38' r='2.4' fill='%23c9a227'/%3E%3C/svg%3E");
+  background-size: contain;
+  background-repeat: no-repeat;
+  opacity: 0.85;
+}
+.panel::before {
+  top: -1px;
+  left: -1px;
+}
+.panel::after {
+  bottom: -1px;
+  right: -1px;
+  transform: rotate(180deg);
+}
+
+/* --- Buttons: gilded engraved plate, glows warmer on hover, presses inward on click ----- */
 .btn-primary {
-  @apply inline-flex items-center justify-center gap-2 border-[3px] border-black bg-gold-500 px-4 py-2 font-display text-[11px] uppercase text-ink-950 transition-transform disabled:cursor-not-allowed disabled:opacity-50;
+  @apply relative inline-flex items-center justify-center gap-2 border border-gold-600 px-4 py-2 font-display text-[11px] uppercase tracking-wider text-ink-950 transition-all disabled:cursor-not-allowed disabled:opacity-50;
+  background: linear-gradient(180deg, #e8cb7d 0%, #c9a227 55%, #8f721b 100%);
   box-shadow:
-    inset -3px -3px 0 0 #a06a00,
-    inset 3px 3px 0 0 #fff2b8,
-    3px 3px 0 0 #000;
+    inset 0 1px 0 rgba(255, 240, 200, 0.6),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.35),
+    0 2px 6px rgba(0, 0, 0, 0.6);
 }
 .btn-primary:hover:not(:disabled) {
-  filter: brightness(1.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 200, 0.7),
+    inset 0 -2px 3px rgba(0, 0, 0, 0.35),
+    0 0 14px rgba(201, 162, 39, 0.55),
+    0 2px 6px rgba(0, 0, 0, 0.6);
 }
 .btn-primary:active:not(:disabled) {
-  transform: translate(2px, 2px);
-  box-shadow: inset 2px 2px 0 0 #a06a00, 1px 1px 0 0 #000;
+  transform: translateY(1px);
+  box-shadow:
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.5);
 }
 .btn-primary:disabled {
-  box-shadow: inset -3px -3px 0 0 rgba(0, 0, 0, 0.3), 3px 3px 0 0 rgba(0, 0, 0, 0.4);
+  background: linear-gradient(180deg, #6b6152 0%, #524a3d 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 1px 2px rgba(0, 0, 0, 0.4);
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center gap-2 border-[3px] border-black bg-ink-700 px-4 py-2 font-display text-[11px] uppercase text-slate-100 transition-transform disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-2 border border-gold-600/50 bg-ink-800 px-4 py-2 font-display text-[11px] uppercase tracking-wider text-gold-400 transition-all disabled:cursor-not-allowed disabled:opacity-50;
   box-shadow:
-    inset -3px -3px 0 0 #171240,
-    inset 3px 3px 0 0 #5f52c9,
-    3px 3px 0 0 #000;
+    inset 0 1px 0 rgba(255, 224, 160, 0.08),
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    0 1px 3px rgba(0, 0, 0, 0.5);
 }
 .btn-secondary:hover:not(:disabled) {
-  @apply bg-ink-600;
+  @apply border-gold-500 bg-ink-700 text-gold-400;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 224, 160, 0.1),
+    inset 0 2px 4px rgba(0, 0, 0, 0.5),
+    0 0 10px rgba(201, 162, 39, 0.3);
 }
 .btn-secondary:active:not(:disabled) {
-  transform: translate(2px, 2px);
-  box-shadow: inset 2px 2px 0 0 #171240, 1px 1px 0 0 #000;
+  transform: translateY(1px);
 }
 
-/* --- XP/HP bars: segmented pips instead of a smooth gradient --------------------------- */
+/* --- XP/HP/liberation bars: smooth gilded fill in an engraved recessed track ------------ */
 .xp-bar-track {
-  @apply h-4 w-full overflow-hidden border-[3px] border-black bg-ink-950;
-  box-shadow: inset 0 0 0 1px #4a3fb0;
+  @apply h-4 w-full overflow-hidden rounded-sm border border-gold-600/60 bg-ink-950;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.75);
 }
 
 .xp-bar-fill {
-  @apply h-full bg-gold-500 transition-all duration-500 ease-out;
-  background-image: repeating-linear-gradient(
-    90deg,
-    #ffe066 0px,
-    #ffe066 6px,
-    #d99a00 6px,
-    #d99a00 8px
-  );
+  @apply h-full transition-all duration-500 ease-out;
+  background-image: linear-gradient(180deg, #f0dc9e 0%, #c9a227 50%, #8f721b 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 240, 200, 0.5);
 }
 
 @keyframes toast-pop-in {
@@ -109,28 +142,30 @@ body::before {
   }
 }
 .toast-pop-in {
-  animation: toast-pop-in 180ms steps(6, end);
+  animation: toast-pop-in 220ms ease-out;
 }
 
 .hp-bar-fill {
   @apply h-full transition-all duration-500 ease-out;
-  background-image: repeating-linear-gradient(
-    90deg,
-    #ff6b6b 0px,
-    #ff6b6b 6px,
-    #b0201f 6px,
-    #b0201f 8px
-  );
+  background-image: linear-gradient(180deg, #d97e70 0%, #8f2a22 60%, #5c1a15 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 200, 190, 0.35);
 }
 
-/* Shared "region liberation" meter - green, distinct from personal gold XP / red HP bars. */
+/* Shared "region liberation" meter - a mossy verdigris-bronze, distinct from gold XP / red HP. */
 .liberation-bar-fill {
   @apply h-full transition-all duration-700 ease-out;
-  background-image: repeating-linear-gradient(
-    90deg,
-    #6bffa0 0px,
-    #6bffa0 6px,
-    #1f9a52 6px,
-    #1f9a52 8px
-  );
+  background-image: linear-gradient(180deg, #9fc08a 0%, #5c8a4a 55%, #35592c 100%);
+  box-shadow: inset 0 1px 0 rgba(220, 240, 200, 0.35);
+}
+
+/* --- Ornamental scroll divider, used between a heading and its section body ------------- */
+.ornate-divider {
+  @apply flex items-center gap-3 text-gold-600/70;
+}
+.ornate-divider::before,
+.ornate-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, currentColor, transparent);
 }

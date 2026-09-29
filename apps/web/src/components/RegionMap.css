@@ -1,5 +1,5 @@
-/* Pixel-art region map - adapted from the supplied package to the site's ink/gold/ember
-   16-bit theme (see index.css .panel/.xp-bar-track for the same border+bevel language). */
+/* Region map - markers styled as gilded medallions to match the site's ink/gold/ember
+   engraved theme (see index.css .panel/.xp-bar-track for the same border+frame language). */
 
 .region-map {
   overflow: auto;
@@ -18,7 +18,6 @@
   width: 100%;
   height: 100%;
   object-fit: fill;
-  image-rendering: pixelated;
   user-select: none;
 }
 
@@ -30,18 +29,19 @@
   gap: 3px;
   min-width: 90px;
   padding: 4px;
-  color: #ffe066; /* gold-400 */
+  color: #e8cb7d; /* gold-400 */
   background: none;
   border: 0;
   cursor: pointer;
-  font-family: "Press Start 2P", monospace;
-  font-size: clamp(7px, 1vw, 10px);
+  font-family: "Cinzel", Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(8px, 1vw, 11px);
   line-height: 1.4;
   text-align: center;
+  letter-spacing: 0.03em;
   text-shadow:
-    1px 2px 0 #0a0820,
-    -1px -1px 0 #0a0820,
-    0 0 8px #0a0820;
+    0 2px 3px rgba(0, 0, 0, 0.95),
+    0 0 8px rgba(0, 0, 0, 0.8);
 }
 
 /* Soft glow over the patch of terrain the marker sits on - not just the badge - so hovering
@@ -56,7 +56,7 @@
   height: clamp(90px, 14vw, 170px);
   transform: translate(-50%, -50%) scale(0.85);
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 224, 102, 0.4) 0%, rgba(255, 224, 102, 0.16) 45%, transparent 72%);
+  background: radial-gradient(circle, rgba(201, 162, 39, 0.4) 0%, rgba(201, 162, 39, 0.16) 45%, transparent 72%);
   opacity: 0;
   pointer-events: none;
   transition:
@@ -71,7 +71,7 @@
 }
 
 .region-map__marker.is-active::before {
-  background: radial-gradient(circle, rgba(255, 68, 51, 0.3) 0%, rgba(255, 68, 51, 0.1) 45%, transparent 72%);
+  background: radial-gradient(circle, rgba(143, 42, 34, 0.35) 0%, rgba(143, 42, 34, 0.12) 45%, transparent 72%);
 }
 
 .region-map__marker-icon {
@@ -79,10 +79,12 @@
   place-items: center;
   width: clamp(26px, 3vw, 40px);
   aspect-ratio: 1;
-  background: #120e33; /* ink-900 */
-  border: 3px solid #ffe066; /* gold-400 */
+  background: radial-gradient(circle at 35% 30%, #3a2a18, #1c140d 70%);
+  border: 2px solid #c9a227; /* gold-500 */
   border-radius: 50%;
-  box-shadow: 2px 2px 0 0 #000;
+  box-shadow:
+    0 2px 5px rgba(0, 0, 0, 0.7),
+    inset 0 0 0 1px rgba(232, 203, 125, 0.3);
   font-size: clamp(13px, 1.5vw, 20px);
   overflow: hidden;
 }
@@ -103,22 +105,23 @@
 .region-map__marker-name {
   display: block;
   max-width: 140px;
-  padding: 3px 5px;
-  background: rgba(10, 8, 32, 0.85); /* ink-950 */
-  border: 1px solid #2a2170; /* ink-700 */
+  padding: 3px 6px;
+  background: rgba(18, 12, 8, 0.85); /* ink-950 */
+  border: 1px solid rgba(201, 162, 39, 0.4); /* gold-500 */
 }
 
 .region-map__marker:hover:not(:disabled) .region-map__marker-icon,
 .region-map__marker:focus-visible .region-map__marker-icon,
 .region-map__marker.is-active .region-map__marker-icon {
-  background: #3d3296; /* ink-600 */
+  background: radial-gradient(circle at 35% 30%, #4d3820, #291d12 70%);
   box-shadow:
-    0 0 0 3px rgba(255, 196, 46, 0.5),
-    0 0 16px rgba(255, 196, 46, 0.35);
+    0 0 0 2px rgba(201, 162, 39, 0.6),
+    0 0 16px rgba(201, 162, 39, 0.4),
+    inset 0 0 0 1px rgba(232, 203, 125, 0.4);
 }
 
 .region-map__marker:focus-visible {
-  outline: 3px solid #ffe066;
+  outline: 2px solid #c9a227;
   outline-offset: 3px;
 }
 
@@ -128,14 +131,14 @@
   cursor: not-allowed;
 }
 .region-map__marker.is-locked .region-map__marker-icon {
-  border-color: #6b6b6b;
+  border-color: #6b6355;
 }
 
 .region-map__marker.is-active {
   cursor: default;
 }
 .region-map__marker.is-active .region-map__marker-icon {
-  border-color: #ff4433; /* ember-500 */
+  border-color: #8f2a22; /* ember-500 */
 }
 
 @media (max-width: 700px) {

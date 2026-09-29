@@ -1,5 +1,5 @@
 /* First-person dungeon-crawler viewport: scene art + a bolted-on HUD bar underneath,
-   in the site's ink/gold/ember 16-bit theme (see index.css .panel for the shared bevel). */
+   in the site's ink/gold/ember gilded-tome theme (see index.css .panel for the shared frame). */
 
 .dungeon-screen {
   padding: 0 !important;
@@ -11,7 +11,7 @@
   width: 100%;
   aspect-ratio: 16 / 9;
   overflow: hidden;
-  background: #0a0820;
+  background: #120c08;
 }
 
 .dungeon-screen__bg {
@@ -28,8 +28,8 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(to bottom, rgba(10, 8, 32, 0.75) 0%, transparent 22%),
-    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.55) 100%);
+    linear-gradient(to bottom, rgba(18, 12, 8, 0.75) 0%, transparent 22%),
+    radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.6) 100%);
   pointer-events: none;
 }
 
@@ -37,12 +37,14 @@
   position: absolute;
   left: 10px;
   top: 8px;
-  font-family: "Press Start 2P", monospace;
-  font-size: clamp(9px, 1.6vw, 13px);
-  color: #ffe066;
+  font-family: "Cinzel", Georgia, serif;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  font-size: clamp(10px, 1.6vw, 14px);
+  color: #e8cb7d;
   text-shadow:
-    2px 2px 0 #000,
-    -1px -1px 0 #000;
+    0 2px 3px rgba(0, 0, 0, 0.9),
+    0 0 10px rgba(201, 162, 39, 0.4);
 }
 
 .dungeon-screen__monster {
@@ -59,8 +61,8 @@
 
 .dungeon-screen__hud {
   display: flex;
-  border-top: 3px solid #000;
-  background: #120e33; /* ink-900 */
+  border-top: 1px solid rgba(201, 162, 39, 0.55);
+  background: #1c140d; /* ink-900 */
 }
 
 .dungeon-hud-cell {
@@ -71,8 +73,8 @@
   justify-content: center;
   gap: 2px;
   padding: 8px 6px;
-  border-right: 2px solid #000;
-  box-shadow: inset 0 2px 0 0 #2a2170;
+  border-right: 1px solid rgba(201, 162, 39, 0.25);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
 }
 .dungeon-hud-cell:last-child {
   border-right: 0;
@@ -82,14 +84,16 @@
 }
 
 .dungeon-hud-cell__label {
-  font-size: 9px;
+  font-family: "EB Garamond", Georgia, serif;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #6f6489;
+  letter-spacing: 0.08em;
+  color: #8a7a5f;
 }
 
 .dungeon-hud-cell__value {
-  font-family: "Press Start 2P", monospace;
-  font-size: clamp(10px, 1.4vw, 13px);
-  color: #ffe066;
+  font-family: "Cinzel", Georgia, serif;
+  font-weight: 600;
+  font-size: clamp(11px, 1.4vw, 14px);
+  color: #e8cb7d;
 }
