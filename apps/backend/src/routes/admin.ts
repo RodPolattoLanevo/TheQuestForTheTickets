@@ -3,7 +3,7 @@ import multer from "multer";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { getPrismaClient } from "@hunt/database";
-import { resolveTicketReward } from "@hunt/game-engine";
+import { resolveTicketReward, computeLevelProgress, totalXpForLevel } from "@hunt/game-engine";
 import { parseTicketCsv } from "@hunt/providers";
 import { requireAuth, requireAdmin } from "../auth/middleware.js";
 import { grantReward } from "../engine/rewards.js";
@@ -54,8 +54,74 @@ async function setSettingRead<T>(key: string, fallback: T): Promise<T> {
 // --- Users --------------------------------------------------------------------------------
 
 adminRouter.get("/users", async (_req, res) => {
+  const curve = await getLevelCurve();
   const users = await prisma.user.findMany({ include: { character: true }, orderBy: { createdAt: "asc" } });
-  res.json(users.map(({ passwordHash, ...u }) => u));
+  res.json(users.map(({ passwordHash, ...u }) => ({ ...u, character: u.character ? { ...u.character, level: computeLevelProgress(u.character.xp, curve).level } : null })));
+});
+
+const correctionSchema = z.object({
+  displayName: z.string().trim().min(1).max(100).optional(),
+  email: z.string().trim().email().optional(),
+  zendeskUserId: z.string().trim().max(100).nullable().optional(),
+  xp: z.number().int().min(0).max(2147483647).optional(),
+  coins: z.number().int().min(0).max(2147483647).optional(),
+  level: z.number().int().min(1).max(1000).optional(),
+  reason: z.string().trim().min(1).max(500),
+}).refine((v) => !(v.xp !== undefined && v.level !== undefined), { message: "Informe XP ou nível, não os dois." })
+  .refine((v) => Object.keys(v).some((key) => key !== "reason"), { message: "Informe uma correção." });
+
+adminRouter.put("/users/:id", async (req, res) => {
+  const parsed = correctionSchema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "Correção inválida", details: parsed.error.flatten() });
+  const input = parsed.data;
+  const curve = await getLevelCurve();
+  let targetXp = input.xp;
+  if (input.level !== undefined) {
+    try { targetXp = totalXpForLevel(input.level, curve); }
+    catch { return res.status(400).json({ error: "Este nível excede o limite de XP permitido." }); }
+  }
+  try {
+    const result = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({ where: { id: req.params.id }, include: { character: true } });
+      if (!user) return null;
+      const character = user.character;
+      if (!character) throw new Error("User has no character");
+      const xp = targetXp ?? character.xp;
+      const coins = input.coins ?? character.coins;
+      const level = computeLevelProgress(xp, curve).level;
+      const updated = await tx.user.update({ where: { id: user.id }, data: {
+        displayName: input.displayName, email: input.email,
+        zendeskUserId: input.zendeskUserId === "" ? null : input.zendeskUserId,
+      } });
+      await tx.character.update({ where: { id: character.id }, data: { xp, coins, level } });
+      const xpDelta = xp - character.xp;
+      const coinsDelta = coins - character.coins;
+      // Split mixed adjustments so the reward ledger retains its existing source semantics.
+      for (const positive of [true, false]) {
+        const dx = positive ? Math.max(0, xpDelta) : Math.min(0, xpDelta);
+        const dc = positive ? Math.max(0, coinsDelta) : Math.min(0, coinsDelta);
+        if (dx || dc) await tx.rewardTransaction.create({ data: {
+          userId: user.id, source: positive ? "ADMIN_GRANT" : "ADMIN_REMOVE",
+          xp: dx, coins: dc, reason: input.reason, actorType: "ADMIN", actorUserId: req.auth!.sub,
+        } });
+      }
+      await tx.adminAction.create({ data: {
+        actorUserId: req.auth!.sub, targetUserId: user.id, actionType: "correct_user",
+        payload: JSON.stringify({ reason: input.reason,
+          before: { displayName: user.displayName, email: user.email, zendeskUserId: user.zendeskUserId, xp: character.xp, coins: character.coins, level: computeLevelProgress(character.xp, curve).level },
+          after: { displayName: updated.displayName, email: updated.email, zendeskUserId: updated.zendeskUserId, xp, coins, level },
+        }),
+      } });
+      return { ok: true, xp, coins, level };
+    }, { isolationLevel: "Serializable" });
+    if (!result) return res.status(404).json({ error: "Usuário não encontrado." });
+    res.json(result);
+  } catch (err) {
+    const code = (err as { code?: string }).code;
+    if (code === "P2002") return res.status(409).json({ error: "Email já cadastrado." });
+    if (code === "P2034") return res.status(409).json({ error: "O progresso mudou durante a correção. Atualize e tente novamente." });
+    throw err;
+  }
 });
 
 const createUserSchema = z.object({
@@ -321,12 +387,16 @@ adminRouter.post("/remove", async (req, res) => {
 });
 
 adminRouter.post("/reset-character", async (req, res) => {
-  const schema = z.object({ userId: z.string() });
+  const schema = z.object({ userId: z.string(), reason: z.string().trim().max(500).optional() });
   const parsed = schema.safeParse(req.body);
   if (!parsed.success) return res.status(400).json({ error: parsed.error.flatten() });
 
   const character = await prisma.character.findUniqueOrThrow({ where: { userId: parsed.data.userId } });
   await prisma.$transaction([
+    prisma.rewardTransaction.create({ data: {
+      userId: parsed.data.userId, source: "ADMIN_REMOVE", xp: -character.xp, coins: -character.coins,
+      reason: parsed.data.reason ?? "Character reset", actorType: "ADMIN", actorUserId: req.auth!.sub,
+    } }),
     prisma.inventoryItem.deleteMany({ where: { characterId: character.id } }),
     prisma.combatSession.deleteMany({ where: { characterId: character.id } }),
     prisma.character.update({
@@ -359,7 +429,7 @@ adminRouter.post("/reset-character", async (req, res) => {
     await prisma.character.update({ where: { id: character.id }, data: { currentWorldId: firstWorld.id, currentStageId: firstStage?.id } });
   }
 
-  await logAdminAction(req.auth!.sub, "reset_character", {}, parsed.data.userId);
+  await logAdminAction(req.auth!.sub, "reset_character", { reason: parsed.data.reason, before: { xp: character.xp, coins: character.coins, level: character.level }, after: { xp: 0, coins: 0, level: 1 } }, parsed.data.userId);
   res.json({ ok: true });
 });
 

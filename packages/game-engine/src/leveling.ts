@@ -2,6 +2,15 @@ import type { LevelCurveConfig } from "@hunt/shared";
 
 export const DEFAULT_LEVEL_CURVE: LevelCurveConfig = { baseXp: 100, growth: 1.18 };
 
+/** Cumulative XP at the start of a level, using the active curve. */
+export function totalXpForLevel(level: number, config: LevelCurveConfig = DEFAULT_LEVEL_CURVE): number {
+  if (!Number.isInteger(level) || level < 1 || level > 1000) throw new Error("Invalid level");
+  let xp = 0;
+  for (let current = 1; current < level; current++) xp += xpToReachNextLevel(current, config);
+  if (!Number.isSafeInteger(xp) || xp > 2147483647) throw new Error("Level exceeds the supported XP limit");
+  return xp;
+}
+
 /** XP required to go from `level` to `level + 1`. */
 export function xpToReachNextLevel(level: number, config: LevelCurveConfig = DEFAULT_LEVEL_CURVE): number {
   return Math.round(config.baseXp * Math.pow(config.growth, level - 1));

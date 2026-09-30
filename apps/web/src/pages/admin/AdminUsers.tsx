@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ApiError } from "../../api/client";
 import { useToast } from "../../context/ToastContext";
+import { UserCorrections } from "./UserCorrections";
 
 interface UserRow {
   id: string;
@@ -37,6 +38,8 @@ export function AdminUsers() {
   }
 
   return (
+    <div className="flex flex-col gap-6">
+      <UserCorrections users={users} onUpdated={load} />
     <div className="grid gap-6 lg:grid-cols-3">
       <form onSubmit={createUser} className="panel flex flex-col gap-3 p-4">
         <h3 className="font-display text-sm text-ember-400">Add Employee</h3>
@@ -65,6 +68,7 @@ export function AdminUsers() {
           </div>
         ))}
       </div>
+    </div>
     </div>
   );
 }

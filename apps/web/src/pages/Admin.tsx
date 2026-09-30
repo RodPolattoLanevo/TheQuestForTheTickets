@@ -10,7 +10,7 @@ import { AdminSettings } from "./admin/AdminSettings";
 
 const TABS = [
   { key: "overview", label: "Overview", Component: AdminOverview },
-  { key: "users", label: "Employees", Component: AdminUsers },
+  { key: "users", label: "Administrar usuários", Component: AdminUsers },
   { key: "rules", label: "Category Rules", Component: AdminCategoryRules },
   { key: "csv", label: "CSV Import", Component: AdminCsvImport },
   { key: "sync", label: "Providers & Sync", Component: AdminProvidersSync },

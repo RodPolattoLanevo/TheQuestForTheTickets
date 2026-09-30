@@ -46,6 +46,8 @@ export async function grantReward(input: GrantRewardInput, curve?: LevelCurveCon
   const resolvedCurve = curve ?? (await getLevelCurve());
 
   return prisma.$transaction(async (tx) => {
+    // Serialize adjustments to this balance, including concurrent ticket rewards.
+    await tx.$queryRaw`SELECT "id" FROM "characters" WHERE "userId" = ${input.userId} FOR UPDATE`;
     const character = await tx.character.findUniqueOrThrow({ where: { userId: input.userId } });
     const levelBefore = computeLevelProgress(character.xp, resolvedCurve).level;
 
@@ -62,8 +64,8 @@ export async function grantReward(input: GrantRewardInput, curve?: LevelCurveCon
       data: {
         userId: input.userId,
         source: input.source,
-        xp,
-        coins,
+        xp: newXp - character.xp,
+        coins: newCoins - character.coins,
         ticketId: input.ticketId ?? undefined,
         eventId: input.eventId ?? undefined,
         category: input.category ?? undefined,
@@ -76,8 +78,8 @@ export async function grantReward(input: GrantRewardInput, curve?: LevelCurveCon
 
     return {
       transactionId: transaction.id,
-      xp,
-      coins,
+      xp: newXp - character.xp,
+      coins: newCoins - character.coins,
       totalXp: newXp,
       totalCoins: newCoins,
       levelBefore,

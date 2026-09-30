@@ -58,3 +58,16 @@ Two views: **Reward Transactions** (every XP/coin change, ever - ticket, combat,
 achievement, shop purchase, admin grant/remove - each with a unique transaction ID) and
 **Admin Actions** (every admin-initiated mutation, with a JSON payload of what changed).
 This is the source of truth for any "why does this person have X XP" dispute.
+# Administração de usuários
+
+Na aba **Administrar usuários**, busque e selecione uma conta. Informe o motivo da correção para habilitar as ações:
+
+- Corrigir nome, email e ID do usuário no Zendesk.
+- Adicionar ou remover XP e moedas, ou definir saldos exatos.
+- Definir um nível: o servidor calcula o XP necessário usando a curva atual.
+- Reiniciar apenas o nível: zera XP, preservando moedas, inventário, conquistas e combates.
+- Reiniciar o personagem completo: também zera moedas/atributos e remove inventário, combates, conquistas e missões. O histórico de tickets e a liberação coletiva permanecem.
+
+As correções de cadastro/saldo registram antes/depois e administrador responsável na auditoria. Ajustes de XP/moedas também geram lançamentos no histórico de recompensas. Tickets antigos não se tornam elegíveis a uma nova recompensa após um reset.
+
+Os novos testes administrativos não usam banco: `npm run test --workspace=apps/backend -- --config vitest.admin.config.ts`.
