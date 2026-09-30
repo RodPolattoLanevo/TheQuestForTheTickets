@@ -17,6 +17,7 @@ async function render() {
 
 function renderLogin(error) {
   app.innerHTML = `
+    <p class="eyebrow">The support guild</p>
     <h1>⚔ The Hunt for the Tickets</h1>
     ${error ? `<p class="error">${error}</p>` : ""}
     <form id="loginForm" autocomplete="on">
@@ -52,8 +53,9 @@ function renderCharacter(me, quests) {
   const activeQuest = quests.find((q) => !q.completed) ?? quests[0];
 
   app.innerHTML = `
+    <p class="eyebrow">The Hunt for the Tickets</p>
     <h1>⚔ ${me.user.displayName}</h1>
-    <div class="row"><span>Level ${me.level}</span><span>${me.xpIntoLevel} / ${me.xpForNextLevel} XP</span></div>
+    <div class="row xp-label"><span>Level ${me.level}</span><span>${me.xpIntoLevel} / ${me.xpForNextLevel} XP</span></div>
     <div class="xp-track"><div class="xp-fill" style="width:${pct}%"></div></div>
     <div class="row"><span>Coins</span><span class="coins">${me.coins.toLocaleString()} 🪙</span></div>
     <div class="row"><span>World</span><span>${me.world?.name ?? "-"}</span></div>
@@ -61,27 +63,27 @@ function renderCharacter(me, quests) {
     ${
       activeQuest
         ? `<div class="card">
-            <strong style="font-size:12px;">Current Quest</strong>
-            <div style="font-size:11px;color:#c9c0dd;margin-top:4px;">${activeQuest.name} (${activeQuest.progress}/${JSON.parse(activeQuest.criteria).target})</div>
+            <strong class="card-title">Current Quest</strong>
+            <div class="quest-detail">${activeQuest.name} (${activeQuest.progress}/${JSON.parse(activeQuest.criteria).target})</div>
           </div>`
         : ""
     }
 
     <div class="card">
-      <strong style="font-size:12px;">Recent Rewards</strong>
+      <strong class="card-title">Recent Rewards</strong>
       ${
         me.recentTransactions
           .slice(0, 4)
-          .map((t) => `<div class="ticket-item">${t.ticket ? `Ticket #${t.ticket.externalId}` : t.reason ?? t.source} — +${t.xp} XP / +${t.coins} coins</div>`)
+          .map((t) => `<div class="ticket-item">${t.ticket ? `Ticket #${t.ticket.externalId}` : t.reason ?? t.source}<span class="reward-values">${t.xp > 0 ? "+" : ""}${t.xp} XP / ${t.coins > 0 ? "+" : ""}${t.coins} coins</span></div>`)
           .join("") || '<div class="ticket-item">No activity yet.</div>'
       }
     </div>
 
-    <button class="secondary" id="previewZendeskBtn">🔍 Preview Tickets On Screen</button>
-    <p style="font-size:10px;color:#6f6489;margin:-4px 0 8px;">Reads only the tickets currently visible in your Zendesk tab - not your whole history.</p>
+    <button class="secondary" id="previewZendeskBtn">Preview Tickets On Screen</button>
+    <p class="hint">Reads only the tickets currently visible in your Zendesk tab - not your whole history.</p>
     <div id="syncResults"></div>
 
-    <a class="link" id="openGame" href="#">Open Full Game →</a>
+    <a class="link game-link" id="openGame" href="#">Open Full Game →</a>
     <button class="secondary" id="logoutBtn">Log out</button>
   `;
 
@@ -96,7 +98,7 @@ function renderCharacter(me, quests) {
   document.getElementById("previewZendeskBtn").addEventListener("click", previewZendeskTickets);
 }
 
-const errorItem = (msg) => `<div class="ticket-item" style="color:#ff8a5c;">${msg}</div>`;
+const errorItem = (msg) => `<div class="ticket-item error">${msg}</div>`;
 
 // Split into two explicit steps on purpose: this one only READS whatever ticket rows are
 // currently rendered in the Zendesk tab (no API call, no query of our own construction -
@@ -160,7 +162,7 @@ async function previewZendeskTickets() {
 function showSubmitConfirmation(tickets) {
   const resultsEl = document.getElementById("syncResults");
   resultsEl.innerHTML = `
-    <div class="ticket-item" style="color:#f4c95d;">
+    <div class="ticket-item warning">
       Submit ${tickets.length} ticket(s) for reward? If any have never been synced before,
       this grants real XP/coins for all of them right now. This can't be undone (though
       Admin -> Grant/Remove/Reset can fix XP/coins afterward).

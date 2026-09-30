@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "The Hunt for the Tickets",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Your RPG character's progress, right from the toolbar. Close tickets, earn XP, level up.",
   "action": {
     "default_popup": "popup.html",

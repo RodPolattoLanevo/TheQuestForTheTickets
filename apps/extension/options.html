@@ -1,5 +1,5 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
     <title>The Hunt for the Tickets - Settings</title>
@@ -9,19 +9,19 @@
   <body>
     <div id="app">
       <h1>⚔ Extension Settings</h1>
-      <label style="font-size:11px;color:#9a8fb5;">Backend API URL</label>
+      <label class="settings-label" for="apiUrl">Backend API URL</label>
       <input id="apiUrl" placeholder="http://localhost:4000" />
-      <label style="font-size:11px;color:#9a8fb5;">Full Game Web URL</label>
+      <label class="settings-label" for="webUrl">Full Game Web URL</label>
       <input id="webUrl" placeholder="http://localhost:5173" />
 
-      <label style="font-size:11px;color:#9a8fb5;">
+      <label class="settings-label" for="excludedRequesters">
         Excluded Zendesk requesters (one per line - name or email; their tickets never earn
         XP, e.g. automated monitoring/alert accounts)
       </label>
-      <textarea id="excludedRequesters" rows="4" style="width:100%;font-family:inherit;font-size:12px;padding:8px;border-radius:8px;border:1px solid #2a1e3d;background:#1c1428;color:#e6e0f0;margin-bottom:8px;" placeholder="Emergency Sacoa&#10;NAKIVO Backup &amp; Replication"></textarea>
+      <textarea id="excludedRequesters" rows="4" placeholder="Emergency Sacoa&#10;NAKIVO Backup &amp; Replication"></textarea>
 
       <button id="save">Save</button>
-      <p id="status" style="font-size:11px;color:#f4c95d;"></p>
+      <p id="status"></p>
     </div>
     <script src="options.js" type="module"></script>
   </body>
